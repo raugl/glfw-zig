@@ -806,7 +806,7 @@ pub const cdef = struct {
     pub extern fn glfwHideWindow(window: Window) void;
     pub extern fn glfwFocusWindow(window: Window) void;
     pub extern fn glfwRequestWindowAttention(window: Window) void;
-    pub extern fn glfwGetWindowMonitor(window: Window) ?*Monitor;
+    pub extern fn glfwGetWindowMonitor(window: Window) ?Monitor;
     pub extern fn glfwSetWindowMonitor(window: Window, monitor: ?Monitor, xpos: c_int, ypos: c_int, width: c_int, height: c_int, refreshRate: c_int) void;
     pub extern fn glfwGetWindowAttrib(window: Window, attrib: WindowGetAttribute) c_int;
     pub extern fn glfwSetWindowAttrib(window: Window, attrib: WindowSetAttribute, value: Bool) void;
@@ -881,8 +881,8 @@ pub const cdef = struct {
     pub extern fn glfwCreateWindowSurface(instance: stub.VkInstance, window: Window, allocator: ?*const stub.VkAllocationCallbacks, surface: *stub.VkSurfaceKHR) stub.VkResult;
 
     // Windows
-    pub extern fn glfwGetWin32Adapter(monitor: *Monitor) ?[*:0]const u8;
-    pub extern fn glfwGetWin32Monitor(monitor: *Monitor) ?[*:0]const u8;
+    pub extern fn glfwGetWin32Adapter(monitor: Monitor) ?[*:0]const u8;
+    pub extern fn glfwGetWin32Monitor(monitor: Monitor) ?[*:0]const u8;
     pub extern fn glfwGetWin32Window(window: Window) ?std.os.windows.HWND;
     pub extern fn glfwGetWGLContext(window: Window) ?std.os.windows.HGLRC;
 
@@ -1129,13 +1129,13 @@ pub fn getInstanceProcAddress(instance: ?stub.VkInstance, procname: [*:0]const u
     unreachable;
 }
 
-pub fn getWin32Adapter(monitor: *Monitor) Error![*:0]const u8 {
+pub fn getWin32Adapter(monitor: Monitor) Error![*:0]const u8 {
     if (cdef.glfwGetWin32Adapter(monitor)) |adapter| return adapter;
     try checkError();
     unreachable;
 }
 
-pub fn getWin32Monitor(monitor: *Monitor) Error![*:0]const u8 {
+pub fn getWin32Monitor(monitor: Monitor) Error![*:0]const u8 {
     if (cdef.glfwGetWin32Monitor(monitor)) |monitor_| return monitor_;
     try checkError();
     unreachable;
@@ -1165,43 +1165,43 @@ pub fn getX11SelectionString() Error![*:0]const u8 {
     unreachable;
 }
 
-pub fn getGLXContext(window: Window) ?stub.GLXContext {
+pub fn getGLXContext(window: Window) Error!stub.GLXContext {
     if (cdef.glfwGetGLXContext(window)) |context| return context;
     try checkError();
     unreachable;
 }
 
-pub fn getWaylandDisplay() ?*stub.wl_display {
+pub fn getWaylandDisplay() Error!*stub.wl_display {
     if (cdef.glfwGetWaylandDisplay()) |display| return display;
     try checkError();
     unreachable;
 }
 
-pub fn getWaylandMonitor() ?*stub.wl_output {
+pub fn getWaylandMonitor() Error!*stub.wl_output {
     if (cdef.glfwGetWaylandMonitor()) |monitor| return monitor;
     try checkError();
     unreachable;
 }
 
-pub fn getWaylandWindow() ?*stub.wl_surface {
+pub fn getWaylandWindow() Error!*stub.wl_surface {
     if (cdef.glfwGetWaylandWindow()) |window| return window;
     try checkError();
     unreachable;
 }
 
-pub fn getEGLDisplay() ?stub.EGLDisplay {
+pub fn getEGLDisplay() Error!stub.EGLDisplay {
     if (cdef.glfwGetEGLDisplay()) |display| return display;
     try checkError();
     unreachable;
 }
 
-pub fn getEGLContext() ?stub.EGLContext {
+pub fn getEGLContext() Error!stub.EGLContext {
     if (cdef.glfwGetEGLContext()) |context| return context;
     try checkError();
     unreachable;
 }
 
-pub fn getEGLSurface() ?stub.EGLSurface {
+pub fn getEGLSurface() Error!stub.EGLSurface {
     if (cdef.glfwGetEGLSurface()) |surface| return surface;
     try checkError();
     unreachable;
