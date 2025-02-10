@@ -1,5 +1,6 @@
 const std = @import("std");
 const Allocator = std.mem.Allocator;
+const glfw = @This();
 
 test {
     _ = std.testing.refAllDeclsRecursive(@This());
@@ -1316,79 +1317,89 @@ pub const getGLXWindow = cdef.glfwGetGLXWindow;
 pub const getOSMesaColorBuffer = cdef.glfwGetOSMesaColorBuffer;
 pub const getOSMesaDepthBuffer = cdef.glfwGetOSMesaDepthBuffer;
 
-// TODO: Resolve ambiguous methods
 pub const Monitor = *opaque {
-    pub const getPos = getMonitorPos;
-    pub const getWorkarea = getMonitorWorkarea;
-    pub const getPhysicalSize = getMonitorPhysicalSize;
-    pub const getContentScale = getMonitorContentScale;
-    pub const getName = getMonitorName;
-    pub const setUserPointer = setMonitorUserPointer;
-    pub const getUserPointer = getMonitorUserPointer;
-    // pub const getVideoModes = getVideoModes;
-    // pub const getVideoMode = getVideoMode;
-    // pub const setGamma = setGamma;
-    // pub const getGammaRamp = getGammaRamp;
-    // pub const setGammaRamp = setGammaRamp;
+    pub const getPos = glfw.getMonitorPos;
+    pub const getWorkarea = glfw.getMonitorWorkarea;
+    pub const getPhysicalSize = glfw.getMonitorPhysicalSize;
+    pub const getContentScale = glfw.getMonitorContentScale;
+    pub const getName = glfw.getMonitorName;
+    pub const setUserPointer = glfw.setMonitorUserPointer;
+    pub const getUserPointer = glfw.getMonitorUserPointer;
+    pub const getVideoModes = glfw.getVideoModes;
+    pub const getVideoMode = glfw.getVideoMode;
+    pub const setGamma = glfw.setGamma;
+    pub const getGammaRamp = glfw.getGammaRamp;
+    pub const setGammaRamp = glfw.setGammaRamp;
 };
 
 pub const Window = *opaque {
-    pub const destroy = destroyWindow;
-    pub const shouldClose = windowShouldClose;
-    pub const setShouldClose = setWindowShouldClose;
-    pub const getTitle = getWindowTitle;
-    pub const setTitle = setWindowTitle;
-    pub const setIcon = setWindowIcon;
-    pub const getPos = getWindowPos;
-    pub const setPos = setWindowPos;
-    pub const getSize = getWindowSize;
-    pub const setSizeLimits = setWindowSizeLimits;
-    pub const setAspectRatio = setWindowAspectRatio;
-    pub const setSize = setWindowSize;
-    // pub const getFramebufferSize = getFramebufferSize;
-    pub const getFrameSize = getWindowFrameSize;
-    pub const getContentScale = getWindowContentScale;
-    pub const getOpacity = getWindowOpacity;
-    pub const setOpacity = setWindowOpacity;
-    pub const iconify = iconifyWindow;
-    pub const restore = restoreWindow;
-    pub const maximize = maximizeWindow;
-    pub const show = showWindow;
-    pub const hide = hideWindow;
-    pub const focus = focusWindow;
-    pub const requestAttention = requestWindowAttention;
-    pub const getMonitor = getWindowMonitor;
-    pub const setMonitor = setWindowMonitor;
-    pub const getAttrib = getWindowAttrib;
-    pub const setAttrib = setWindowAttrib;
-    pub const setUserPointer = setWindowUserPointer;
-    pub const getUserPointer = getWindowUserPointer;
-    pub const setPosCallback = setWindowPosCallback;
-    pub const setSizeCallback = setWindowSizeCallback;
-    pub const setCloseCallback = setWindowCloseCallback;
-    pub const setRefreshCallback = setWindowRefreshCallback;
-    pub const setFocusCallback = setWindowFocusCallback;
-    pub const setIconifyCallback = setWindowIconifyCallback;
-    pub const setMaximizeCallback = setWindowMaximizeCallback;
-    // pub const setFramebufferSizeCallback = setFramebufferSizeCallback;
-    pub const setContentScaleCallback = setWindowContentScaleCallback;
-    // pub const getInputMode = getInputMode;
-    // pub const setInputMode = setInputMode;
-    // pub const getKey = getKey;
-    // pub const getMouseButton = getMouseButton;
-    // pub const getCursorPos = getCursorPos;
-    // pub const setCursorPos = setCursorPos;
-    // pub const setCursor = setCursor;
-    // pub const setKeyCallback = setKeyCallback;
-    // pub const setCharCallback = setCharCallback;
-    // pub const setCharModsCallback = setCharModsCallback;
-    // pub const setMouseButtonCallback = setMouseButtonCallback;
-    // pub const setCursorPosCallback = setCursorPosCallback;
-    // pub const setCursorEnterCallback = setCursorEnterCallback;
-    // pub const setScrollCallback = setScrollCallback;
-    // pub const setDropCallback = setDropCallback;
+    pub const destroy = glfw.destroyWindow;
+    pub const shouldClose = glfw.windowShouldClose;
+    pub const setShouldClose = glfw.setWindowShouldClose;
+    pub const getTitle = glfw.getWindowTitle;
+    pub const setTitle = glfw.setWindowTitle;
+    pub const setIcon = glfw.setWindowIcon;
+    pub const getPos = glfw.getWindowPos;
+    pub const setPos = glfw.setWindowPos;
+    pub const getSize = glfw.getWindowSize;
+    pub const setSizeLimits = glfw.setWindowSizeLimits;
+    pub const setAspectRatio = glfw.setWindowAspectRatio;
+    pub const setSize = glfw.setWindowSize;
+    pub const getFramebufferSize = glfw.getFramebufferSize;
+    pub const getFrameSize = glfw.getWindowFrameSize;
+    pub const getContentScale = glfw.getWindowContentScale;
+    pub const getOpacity = glfw.getWindowOpacity;
+    pub const setOpacity = glfw.setWindowOpacity;
+    pub const iconify = glfw.iconifyWindow;
+    pub const restore = glfw.restoreWindow;
+    pub const maximize = glfw.maximizeWindow;
+    pub const show = glfw.showWindow;
+    pub const hide = glfw.hideWindow;
+    pub const focus = glfw.focusWindow;
+    pub const requestAttention = glfw.requestWindowAttention;
+    pub const getMonitor = glfw.getWindowMonitor;
+    pub const setMonitor = glfw.setWindowMonitor;
+    pub const getAttrib = glfw.getWindowAttrib;
+    pub const setAttrib = glfw.setWindowAttrib;
+    pub const setUserPointer = glfw.setWindowUserPointer;
+    pub const getUserPointer = glfw.getWindowUserPointer;
+    pub const setPosCallback = glfw.setWindowPosCallback;
+    pub const setSizeCallback = glfw.setWindowSizeCallback;
+    pub const setCloseCallback = glfw.setWindowCloseCallback;
+    pub const setRefreshCallback = glfw.setWindowRefreshCallback;
+    pub const setFocusCallback = glfw.setWindowFocusCallback;
+    pub const setIconifyCallback = glfw.setWindowIconifyCallback;
+    pub const setMaximizeCallback = glfw.setWindowMaximizeCallback;
+    pub const setFramebufferSizeCallback = glfw.setFramebufferSizeCallback;
+    pub const setContentScaleCallback = glfw.setWindowContentScaleCallback;
+    pub const getInputMode = glfw.getInputMode;
+    pub const setInputMode = glfw.setInputMode;
+    pub const getKey = glfw.getKey;
+    pub const getMouseButton = glfw.getMouseButton;
+    pub const getCursorPos = glfw.getCursorPos;
+    pub const setCursorPos = glfw.setCursorPos;
+    pub const setCursor = glfw.setCursor;
+    pub const setKeyCallback = glfw.setKeyCallback;
+    pub const setCharCallback = glfw.setCharCallback;
+    pub const setCharModsCallback = glfw.setCharModsCallback;
+    pub const setMouseButtonCallback = glfw.setMouseButtonCallback;
+    pub const setCursorPosCallback = glfw.setCursorPosCallback;
+    pub const setCursorEnterCallback = glfw.setCursorEnterCallback;
+    pub const setScrollCallback = glfw.setScrollCallback;
+    pub const setDropCallback = glfw.setDropCallback;
+    pub const swapBuffers = glfw.swapBuffers;
+
+    pub fn setClipboardString(self: Window, string: [*:0]const u8) void {
+        return glfw.setClipboardString(self, string);
+    }
+    pub fn getClipboardString(self: Window) Error![*:0]const u8 {
+        return glfw.getClipboardString(self);
+    }
+    pub fn makeContextCurrent(self: Window) void {
+        return glfw.makeContextCurrent(self);
+    }
 };
 
 pub const Cursor = *opaque {
-    pub const destroy = destroyCursor;
+    pub const destroy = glfw.destroyCursor;
 };
