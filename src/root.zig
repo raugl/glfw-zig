@@ -360,7 +360,7 @@ pub const InitHint = enum(c_int) {
             .x11_xcb_vulkan_surface,
             => bool,
             .platform => Platform,
-            .angle_platform_type => AnglePlatform,
+            .angle_platform => AnglePlatform,
             .wayland_libdecor => WaylandLibdecor,
         };
     }
@@ -437,7 +437,7 @@ pub const WindowHint = enum(c_int) {
             .opengl_forward_compat,
             .context_debug,
             .win32_keyboard_menu,
-            .win32_showdefault,
+            .win32_show_default,
             .cocoa_graphics_switching,
             => bool,
             .red_bits, // 0 to INT_MAX or GLFW_DONT_CARE
@@ -457,6 +457,7 @@ pub const WindowHint = enum(c_int) {
             .position_y, // Any valid screen x-coordinate or GLFW_ANY_POSITION
             .context_version_major,
             .context_version_minor,
+            .context_revision,
             => c_int,
             .cocoa_frame_name,
             .wayland_app_id,
@@ -750,6 +751,7 @@ pub const stub = struct {
     pub const OSMesaContext = *anyopaque;
 };
 
+// TODO: Add wrapper for functions with `Bool`
 pub const cdef = struct {
     pub extern fn glfwInit() Bool;
     pub extern fn glfwTerminate() void;
@@ -918,7 +920,12 @@ pub const cdef = struct {
 };
 
 pub fn init() Error!void {
+    _ = setErrorCallback(&defaultErrorCallbac);
     if (cdef.glfwInit() == .false) try checkError();
+}
+
+fn defaultErrorCallbac(error_code: ErrorCode, description: [*:0]const u8) callconv(.C) void {
+    std.log.err("GLFW {s}: {s}", .{ @tagName(error_code), description });
 }
 
 pub fn initAllocator(allocator: ?Allocator) void {
