@@ -5,8 +5,6 @@ test {
     _ = std.testing.refAllDeclsRecursive(@This());
 }
 
-// TODO: Add native functions
-
 pub const version_major = 3;
 pub const version_minor = 4;
 pub const version_revision = 0;
@@ -16,6 +14,7 @@ pub const any_position: c_int = 0x80000000;
 
 pub const key_last: comptime_int = @intFromEnum(Key.menu);
 pub const mouse_button_last: comptime_int = @intFromEnum(MouseButton.b8);
+pub const joystck_last: comptime_int = @intFromEnum(JoystickID.j16);
 pub const gamepad_axis_last: comptime_int = @intFromEnum(GamepadAxis.right_trigger);
 pub const gamepad_button_last: comptime_int = @intFromEnum(GamepadButton.dpad_left);
 
@@ -169,7 +168,6 @@ pub const JoystickID = enum(c_int) {
     j15 = 14,
     j16 = 15,
 };
-pub const joystck_last = @intFromEnum(JoystickID.j16);
 
 pub const GamepadButton = enum(c_int) {
     a = 0,
@@ -458,16 +456,16 @@ pub const WindowHint = enum(c_int) {
             .context_version_major,
             .context_version_minor,
             => c_int,
-            .client_api => ClientAPI,
-            .context_creation_api => ContextCreationAPI,
-            .context_robustness => ContextRobustness,
-            .context_release_behavior => ContextReleaseBehavior,
-            .opengl_profile => OpenGLProfile,
             .cocoa_frame_name,
             .wayland_app_id,
             .x11_class_name,
             .x11_instance_name,
             => [*:0]const u8,
+            .client_api => ClientAPI,
+            .context_creation_api => ContextCreationAPI,
+            .context_robustness => ContextRobustness,
+            .context_release_behavior => ContextReleaseBehavior,
+            .opengl_profile => OpenGLProfile,
         };
     }
 };
@@ -550,12 +548,12 @@ pub const InputMode = enum(c_int) {
 
     pub fn ValueType(comptime mode: InputMode) type {
         return switch (mode) {
-            .cursor => CursorKind,
             .sticky_keys,
             .sticky_mouse_buttons,
             .lock_key_mods,
             .raw_mouse_motion,
             => bool,
+            .cursor => CursorKind,
         };
     }
 };
@@ -722,6 +720,35 @@ pub const GlfwAllocator = extern struct {
     user: ?*anyopaque = null,
 };
 
+pub const stub = struct {
+    // Vulkan
+    pub const VkInstance = *anyopaque;
+    pub const VkPhysicalDevice = *anyopaque;
+    pub const VkSurfaceKHR = *anyopaque;
+    pub const VkAllocationCallbacks = anyopaque;
+    pub const VkResult = c_int;
+    pub const PFN_vkGetInstanceProcAddr = *const fn (instance: ?VkInstance, pName: [*:0]const u8) callconv(.C) ?VkProc;
+
+    // X11
+    pub const Display = anyopaque;
+    pub const RRCrtc = c_ulong;
+    pub const RROutput = c_ulong;
+    pub const Window = c_ulong;
+    pub const GLXContext = *anyopaque;
+    pub const GLXWindow = c_ulong;
+
+    // Wayland
+    pub const wl_display = anyopaque;
+    pub const wl_output = anyopaque;
+    pub const wl_surface = anyopaque;
+    pub const EGLDisplay = *anyopaque;
+    pub const EGLContext = *anyopaque;
+    pub const EGLSurface = *anyopaque;
+
+    // OSMesa
+    pub const OSMesaContext = *anyopaque;
+};
+
 pub const cdef = struct {
     pub extern fn glfwInit() Bool;
     pub extern fn glfwTerminate() void;
@@ -844,10 +871,49 @@ pub const cdef = struct {
     pub extern fn glfwVulkanSupported() Bool;
     pub extern fn glfwGetRequiredInstanceExtensions(count: *u32) ?[*][*:0]const u8;
 
-    // pub extern fn glfwInitVulkanLoader(loader: ?PFN_vkGetInstanceProcAddr) void;
-    // pub extern fn glfwGetInstanceProcAddress(instance: ?VkInstance, procname: [*:0]const u8) ?VkProc;
-    // pub extern fn glfwGetPhysicalDevicePresentationSupport(instance: VkInstance, device: VkPhysicalDevice, queuefamily: u32) Bool;
-    // pub extern fn glfwCreateWindowSurface(instance: VkInstance, window: Window, allocator: ?*const VkAllocationCallbacks, surface: *VkSurfaceKHR) VkResult;
+    // Vulkan
+    pub extern fn glfwInitVulkanLoader(loader: ?stub.PFN_vkGetInstanceProcAddr) void;
+    pub extern fn glfwGetInstanceProcAddress(instance: ?stub.VkInstance, procname: [*:0]const u8) ?VkProc;
+    pub extern fn glfwGetPhysicalDevicePresentationSupport(instance: stub.VkInstance, device: stub.VkPhysicalDevice, queuefamily: u32) Bool;
+    pub extern fn glfwCreateWindowSurface(instance: stub.VkInstance, window: Window, allocator: ?*const stub.VkAllocationCallbacks, surface: *stub.VkSurfaceKHR) stub.VkResult;
+
+    // Windows
+    pub extern fn glfwGetWin32Adapter(monitor: *Monitor) ?[*:0]const u8;
+    pub extern fn glfwGetWin32Monitor(monitor: *Monitor) ?[*:0]const u8;
+    pub extern fn glfwGetWin32Window(window: Window) ?std.os.windows.HWND;
+    pub extern fn glfwGetWGLContext(window: Window) ?std.os.windows.HGLRC;
+
+    // Macos
+    // TODO: I have no idea what goes on in mac land
+    // pub extern fn glfwGetCocoaMonitor(monitor: Monitor) CGDirectDisplayID;
+    // pub extern fn glfwGetCocoaWindow(window: Window) ?id;
+    // pub extern fn glfwGetCocoaView(window: Window) ?id;
+    // pub extern fn glfwGetNSGLContext(window: Window) ?id;
+
+    // X11
+    pub extern fn glfwGetX11Display() ?*stub.Display;
+    pub extern fn glfwGetX11Adapter(monitor: Monitor) stub.RRCrtc;
+    pub extern fn glfwGetX11Monitor(monitor: Monitor) stub.RROutput;
+    pub extern fn glfwGetX11Window(window: Window) stub.Window;
+    pub extern fn glfwSetX11SelectionString(string: [*:0]const u8) void;
+    pub extern fn glfwGetX11SelectionString() ?[*:0]const u8;
+
+    pub extern fn glfwGetGLXContext(window: Window) ?stub.GLXContext;
+    pub extern fn glfwGetGLXWindow(window: Window) stub.GLXWindow;
+
+    // Wayland
+    pub extern fn glfwGetWaylandDisplay() ?*stub.wl_display;
+    pub extern fn glfwGetWaylandMonitor() ?*stub.wl_output;
+    pub extern fn glfwGetWaylandWindow() ?*stub.wl_surface;
+
+    pub extern fn glfwGetEGLDisplay() ?stub.EGLDisplay;
+    pub extern fn glfwGetEGLContext() ?stub.EGLContext;
+    pub extern fn glfwGetEGLSurface() ?stub.EGLSurface;
+
+    // OSMesa
+    pub extern fn glfwGetOSMesaColorBuffer(window: Window, width: ?*c_int, height: ?*c_int, format: ?*c_int, buffer: ?[*][*]u8) Bool;
+    pub extern fn glfwGetOSMesaDepthBuffer(window: Window, width: ?*c_int, height: ?*c_int, bytesPerValue: ?*c_int, buffer: ?[*][*]u8) Bool;
+    pub extern fn glfwGetOSMesaContext(window: Window) ?stub.OSMesaContext;
 };
 
 pub fn init() Error!void {
