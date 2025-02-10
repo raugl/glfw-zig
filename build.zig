@@ -30,7 +30,7 @@ pub fn build(b: *std.Build) void {
     const options_module = options_step.createModule();
 
     const module = b.addModule("root", .{
-        .root_source_file = b.path("src/zglfw.zig"),
+        .root_source_file = b.path("src/root.zig"),
         .imports = &.{
             .{ .name = "zglfw_options", .module = options_module },
         },
@@ -183,7 +183,7 @@ pub fn build(b: *std.Build) void {
     const test_step = b.step("test", "Run zglfw tests");
     const tests = b.addTest(.{
         .name = "zglfw-tests",
-        .root_source_file = b.path("src/zglfw.zig"),
+        .root_source_file = b.path("src/root.zig"),
         .target = target,
         .optimize = optimize,
     });
