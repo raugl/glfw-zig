@@ -10,7 +10,7 @@ pub const version_minor = 4;
 pub const version_revision = 0;
 
 pub const dont_care: c_int = -1;
-pub const any_position: c_int = 0x80000000;
+pub const any_position: c_int = -0x80000000;
 
 pub const key_last: comptime_int = @intFromEnum(Key.menu);
 pub const mouse_button_last: comptime_int = @intFromEnum(MouseButton.b8);
@@ -39,7 +39,7 @@ pub const AnglePlatform = enum(c_int) {
     d3d9 = 0x37004,
     d3d11 = 0x37005,
     vulkan = 0x37007,
-    metal = 0x37007,
+    metal = 0x37008,
 };
 
 pub const WaylandLibdecor = enum(c_int) {
@@ -50,7 +50,7 @@ pub const WaylandLibdecor = enum(c_int) {
 pub const ClientAPI = enum(c_int) {
     no_api = 0,
     opengl_api = 0x30001,
-    opengles_api = 0x30001,
+    opengles_api = 0x30002,
 };
 
 pub const OpenGLProfile = enum(c_int) {
@@ -89,15 +89,16 @@ pub const CursorShape = enum(c_int) {
     ibeam = 0x36002,
     crosshair = 0x36003,
     pointing_hand = 0x36004,
-    hand = .pointing_hand,
     resize_ew = 0x36005,
-    hresize = .resize_ew,
     resize_ns = 0x36006,
-    vresize = .resize_ns,
     resize_nwse = 0x36007,
     resize_nesw = 0x36008,
     resize_all = 0x36009,
     not_allowed = 0x3600a,
+
+    pub const hand = .pointing_hand;
+    pub const hresize = .resize_ew;
+    pub const vresize = .resize_ns;
 };
 
 pub const Event = enum(c_int) {
@@ -186,10 +187,10 @@ pub const GamepadButton = enum(c_int) {
     dpad_down = 13,
     dpad_left = 14,
 
-    cross = .a,
-    circle = .b,
-    square = .x,
-    triangle = .y,
+    pub const cross = .a;
+    pub const circle = .b;
+    pub const square = .x;
+    pub const triangle = .y;
 };
 
 pub const GamepadAxis = enum(c_int) {
@@ -210,9 +211,10 @@ pub const MouseButton = enum(c_int) {
     b6 = 5,
     b7 = 6,
     b8 = 7,
-    left = .b1,
-    right = .b2,
-    middle = .b3,
+
+    pub const left = .b1;
+    pub const right = .b2;
+    pub const middle = .b3;
 };
 
 pub const Key = enum(c_int) {
@@ -491,13 +493,13 @@ pub const WindowGetAttribute = enum(c_int) {
     context_robustness = 0x22005,
     opengl_forward_compat = 0x22006,
     context_debug = 0x22007,
-    opengl_debug_context = .context_debug,
     opengl_profile = 0x22008,
     context_release_behavior = 0x22009,
     context_no_error = 0x2200a,
     context_creation_api = 0x2200b,
 
-    // FIXME: cases
+    pub const opengl_debug_context = .context_debug;
+
     pub fn ValueType(comptime attrib: WindowGetAttribute) type {
         return switch (attrib) {
             .focused,
@@ -611,7 +613,6 @@ fn checkError() Error!void {
         .feature_unavailable => Error.FeatureUnavailable,
         .feature_unimplemented => Error.FeatureUnimplemented,
         .platform_unavailable => Error.PlatformUnavailable,
-        else => Error.Unknown,
     };
 }
 
@@ -637,9 +638,9 @@ fn castFromCint(comptime T: type, value: c_int) T {
 pub const GLProc = *const fn () callconv(.C) void;
 pub const VkProc = *const fn () callconv(.C) void;
 
-pub const AllocateFn = *const fn (size: usize, user: ?*anyopaque) callconv(.C) ?[*]anyopaque;
-pub const ReallocateFn = *const fn (block: [*]anyopaque, size: usize, user: ?*anyopaque) callconv(.C) ?[*]anyopaque;
-pub const DeallocateFn = *const fn (block: [*]anyopaque, user: ?*anyopaque) callconv(.C) void;
+pub const AllocateFn = *const fn (size: usize, user: ?*anyopaque) callconv(.C) ?[*]u8;
+pub const ReallocateFn = *const fn (block: [*]u8, size: usize, user: ?*anyopaque) callconv(.C) ?[*]u8;
+pub const DeallocateFn = *const fn (block: [*]u8, user: ?*anyopaque) callconv(.C) void;
 
 pub const ErrorFn = *const fn (error_code: ErrorCode, description: [*:0]const u8) callconv(.C) void;
 pub const WindowPosFn = *const fn (window: Window, xpos: c_int, ypos: c_int) callconv(.C) void;
@@ -926,16 +927,30 @@ pub fn initAllocator(allocator: ?Allocator) void {
         // while glfw is initilazied. As a result, allocations are guaranteed to not leak from an
         // allocator to another, so it's safe to have a single global one.
         var alloc: Allocator = undefined;
+        const prefix_len = @sizeOf(usize);
 
-        // FIXME: Does the zig allocator support not passing the length around?
-        fn allocate(size: usize, _: ?*anyopaque) callconv(.C) ?[*]anyopaque {
-            return alloc.alloc(anyopaque, size) catch return null;
+        // TODO: I don't know what alignment implications has packing the length
+        // TODO: Make sure to align the allocations as close to what GLFW expects
+
+        fn allocate(size: usize, _: ?*anyopaque) callconv(.C) ?[*]u8 {
+            const slice = alloc.alloc(u8, size + prefix_len) catch return null;
+            std.mem.bytesAsValue(usize, slice[0..prefix_len]).* = slice.len;
+            return slice[prefix_len..].ptr;
         }
-        fn reallocate(block: [*]anyopaque, size: usize, _: ?*anyopaque) callconv(.C) ?[*]anyopaque {
-            return alloc.realloc(block, size) catch return null;
+
+        fn reallocate(block: [*]u8, size: usize, _: ?*anyopaque) callconv(.C) ?[*]u8 {
+            const base_ptr: [*]u8 = @ptrFromInt(@intFromPtr(block) - prefix_len);
+            const slice_len = std.mem.bytesToValue(usize, base_ptr[0..prefix_len]);
+
+            const slice = alloc.realloc(base_ptr[0..slice_len], size + prefix_len) catch return null;
+            std.mem.bytesAsValue(usize, slice[0..prefix_len]).* = slice.len;
+            return slice[prefix_len..].ptr;
         }
-        fn deallocate(block: [*]anyopaque, _: ?*anyopaque) callconv(.C) void {
-            alloc.free(block);
+
+        fn deallocate(block: [*]u8, _: ?*anyopaque) callconv(.C) void {
+            const base_ptr: [*]u8 = @ptrFromInt(@intFromPtr(block) - prefix_len);
+            const slice_len = std.mem.bytesToValue(usize, base_ptr[0..prefix_len]);
+            alloc.free(base_ptr[0..slice_len]);
         }
     };
 
@@ -1000,7 +1015,7 @@ pub fn setWindowAttrib(self: Window, comptime attrib: WindowSetAttribute, value:
     try checkError();
 }
 
-pub fn setInputMode(window: Window, mode: InputMode, value: InputMode.ValueType(mode)) Error!void {
+pub fn setInputMode(window: Window, comptime mode: InputMode, value: InputMode.ValueType(mode)) Error!void {
     cdef.glfwSetInputMode(window, mode, castToCint(value));
     try checkError();
 }
@@ -1048,6 +1063,7 @@ pub fn getMonitors() []const Monitor {
     if (cdef.glfwGetMonitors(&count)) |monitors| {
         return monitors[0..@intCast(count)];
     }
+    return &.{};
 }
 
 pub fn getVideoModes(monitor: Monitor) []const VideoMode {
@@ -1055,6 +1071,7 @@ pub fn getVideoModes(monitor: Monitor) []const VideoMode {
     if (cdef.glfwGetVideoModes(monitor, &count)) |modes| {
         return modes[0..@intCast(count)];
     }
+    return &.{};
 }
 
 pub fn getJoystickAxes(jid: JoystickID) []const f32 {
@@ -1062,6 +1079,7 @@ pub fn getJoystickAxes(jid: JoystickID) []const f32 {
     if (cdef.glfwGetJoystickAxes(jid, &count)) |axes| {
         return axes[0..@intCast(count)];
     }
+    return &.{};
 }
 
 pub fn getJoystickButtons(jid: JoystickID) []const ButtonState {
@@ -1069,6 +1087,7 @@ pub fn getJoystickButtons(jid: JoystickID) []const ButtonState {
     if (cdef.glfwGetJoystickButtons(jid, &count)) |buttons| {
         return buttons[0..@intCast(count)];
     }
+    return &.{};
 }
 
 pub fn getJoystickHats(jid: JoystickID) []const HatState {
@@ -1076,13 +1095,14 @@ pub fn getJoystickHats(jid: JoystickID) []const HatState {
     if (cdef.glfwGetJoystickHats(jid, &count)) |hats| {
         return hats[0..@intCast(count)];
     }
+    return &.{};
 }
 
-pub fn initHint(hint: InitHint, value: InitHint.ValueType(hint)) void {
+pub fn initHint(comptime hint: InitHint, value: InitHint.ValueType(hint)) void {
     cdef.glfwInitHint(hint, castToCint(value));
 }
 
-pub fn windowHint(hint: WindowHint, value: WindowHint.ValueType(hint)) void {
+pub fn windowHint(comptime hint: WindowHint, value: WindowHint.ValueType(hint)) void {
     cdef.glfwWindowHint(hint, castToCint(value));
 }
 
@@ -1091,8 +1111,8 @@ pub fn getWindowAttrib(window: Window, comptime attrib: WindowGetAttribute) Wind
     return castFromCint(WindowGetAttribute.ValueType(attrib), value);
 }
 
-pub fn getInputMode(window: Window, mode: InputMode) c_int {
-    const value = cdef.glfwGetWindowAttrib(window, mode);
+pub fn getInputMode(window: Window, comptime mode: InputMode) c_int {
+    const value = cdef.glfwGetInputMode(window, mode);
     return castFromCint(InputMode.ValueType(mode), value);
 }
 
