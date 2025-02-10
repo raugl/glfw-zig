@@ -1116,6 +1116,96 @@ pub fn getInputMode(window: Window, comptime mode: InputMode) c_int {
     return castFromCint(InputMode.ValueType(mode), value);
 }
 
+pub fn getInstanceProcAddress(instance: ?stub.VkInstance, procname: [*:0]const u8) Error!VkProc {
+    if (cdef.glfwGetInstanceProcAddress(instance, procname)) |proc| return proc;
+    try checkError();
+    unreachable;
+}
+
+pub fn getWin32Adapter(monitor: *Monitor) Error![*:0]const u8 {
+    if (cdef.glfwGetWin32Adapter(monitor)) |adapter| return adapter;
+    try checkError();
+    unreachable;
+}
+
+pub fn getWin32Monitor(monitor: *Monitor) Error![*:0]const u8 {
+    if (cdef.glfwGetWin32Monitor(monitor)) |monitor_| return monitor_;
+    try checkError();
+    unreachable;
+}
+
+pub fn getWin32Window(window: Window) Error!std.os.windows.HWND {
+    if (cdef.glfwGetWin32Window(window)) |window_| return window_;
+    try checkError();
+    unreachable;
+}
+
+pub fn getWGLContext(window: Window) Error!std.os.windows.HGLRC {
+    if (cdef.glfwGetWGLContext(window)) |context| return context;
+    try checkError();
+    unreachable;
+}
+
+pub fn getX11Display() Error!*stub.Display {
+    if (cdef.glfwGetX11Display()) |display| return display;
+    try checkError();
+    unreachable;
+}
+
+pub fn getX11SelectionString() Error![*:0]const u8 {
+    if (cdef.glfwGetX11SelectionString()) |string| return string;
+    try checkError();
+    unreachable;
+}
+
+pub fn getGLXContext(window: Window) ?stub.GLXContext {
+    if (cdef.glfwGetGLXContext(window)) |context| return context;
+    try checkError();
+    unreachable;
+}
+
+pub fn getWaylandDisplay() ?*stub.wl_display {
+    if (cdef.glfwGetWaylandDisplay()) |display| return display;
+    try checkError();
+    unreachable;
+}
+
+pub fn getWaylandMonitor() ?*stub.wl_output {
+    if (cdef.glfwGetWaylandMonitor()) |monitor| return monitor;
+    try checkError();
+    unreachable;
+}
+
+pub fn getWaylandWindow() ?*stub.wl_surface {
+    if (cdef.glfwGetWaylandWindow()) |window| return window;
+    try checkError();
+    unreachable;
+}
+
+pub fn getEGLDisplay() ?stub.EGLDisplay {
+    if (cdef.glfwGetEGLDisplay()) |display| return display;
+    try checkError();
+    unreachable;
+}
+
+pub fn getEGLContext() ?stub.EGLContext {
+    if (cdef.glfwGetEGLContext()) |context| return context;
+    try checkError();
+    unreachable;
+}
+
+pub fn getEGLSurface() ?stub.EGLSurface {
+    if (cdef.glfwGetEGLSurface()) |surface| return surface;
+    try checkError();
+    unreachable;
+}
+
+pub fn getOSMesaContext(window: Window) Error!stub.OSMesaContext {
+    if (cdef.glfwGetOSMesaContext(window)) |context| return context;
+    try checkError();
+    unreachable;
+}
+
 pub const terminate = cdef.glfwTerminate;
 pub const getVersion = cdef.glfwGetVersion;
 pub const getVersionString = cdef.glfwGetVersionString;
@@ -1208,7 +1298,18 @@ pub const swapInterval = cdef.glfwSwapInterval;
 pub const extensionSupported = cdef.glfwExtensionSupported;
 pub const getProcAddress = cdef.glfwGetProcAddress;
 pub const vulkanSupported = cdef.glfwVulkanSupported;
+pub const initVulkanLoader = cdef.glfwInitVulkanLoader;
+pub const getPhysicalDevicePresentationSupport = cdef.glfwGetPhysicalDevicePresentationSupport;
+pub const createWindowSurface = cdef.glfwCreateWindowSurface;
+pub const getX11Adapter = cdef.glfwGetX11Adapter;
+pub const getX11Monitor = cdef.glfwGetX11Monitor;
+pub const getX11Window = cdef.glfwGetX11Window;
+pub const setX11SelectionString = cdef.glfwSetX11SelectionString;
+pub const getGLXWindow = cdef.glfwGetGLXWindow;
+pub const getOSMesaColorBuffer = cdef.glfwGetOSMesaColorBuffer;
+pub const getOSMesaDepthBuffer = cdef.glfwGetOSMesaDepthBuffer;
 
+// TODO: Resolve ambiguous methods
 pub const Monitor = *opaque {
     pub const getPos = getMonitorPos;
     pub const getWorkarea = getMonitorWorkarea;
