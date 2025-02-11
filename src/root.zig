@@ -752,7 +752,6 @@ pub const stub = struct {
     pub const OSMesaContext = *anyopaque;
 };
 
-// TODO: Add wrapper for functions with `Bool`
 pub const cdef = struct {
     pub extern fn glfwInit() Bool;
     pub extern fn glfwTerminate() void;
@@ -1019,12 +1018,12 @@ pub fn setWindowOpacity(self: Window, opacity: f32) Error!void {
 }
 
 pub fn setWindowAttrib(self: Window, comptime attrib: WindowSetAttribute, value: bool) Error!void {
-    cdef.glfwSetWindowAttrib(self, attrib, castToCint(value));
+    cdef.glfwSetWindowAttrib(self, attrib, if (value) .true else .false);
     try checkError();
 }
 
 pub fn setInputMode(window: Window, comptime mode: InputMode, value: InputMode.ValueType(mode)) Error!void {
-    cdef.glfwSetInputMode(window, mode, castToCint(value));
+    cdef.glfwSetInputMode(window, mode, if (value) .true else .false);
     try checkError();
 }
 
@@ -1213,6 +1212,53 @@ pub fn getOSMesaContext(window: Window) Error!stub.OSMesaContext {
     try checkError();
     unreachable;
 }
+pub fn platformSupported(platform: Platform) bool {
+    return cdef.glfwPlatformSupported(platform) == .true;
+}
+
+pub fn windowShouldClose(window: Window) bool {
+    return cdef.glfwWindowShouldClose(window) == .true;
+}
+
+pub fn setWindowShouldClose(window: Window, value: bool) void {
+    cdef.glfwSetWindowShouldClose(window, if (value) .true else false);
+}
+
+pub fn rawMouseMotionSupported() bool {
+    return cdef.glfwRawMouseMotionSupported() == .true;
+}
+
+pub fn joystickPresent(jid: JoystickID) bool {
+    return cdef.glfwJoystickPresent(jid) == .true;
+}
+
+pub fn joystickIsGamepad(jid: JoystickID) bool {
+    return cdef.glfwJoystickIsGamepad(jid) == .true;
+}
+
+pub fn getGamepadState(jid: JoystickID, state: *GamepadState) bool {
+    return cdef.glfwGetGamepadState(jid, state) == .true;
+}
+
+pub fn extensionSupported(extension: [*:0]const u8) bool {
+    return cdef.glfwExtensionSupported(extension) == .true;
+}
+
+pub fn vulkanSupported() bool {
+    return cdef.glfwVulkanSupported == .true;
+}
+
+pub fn getPhysicalDevicePresentationSupport(instance: stub.VkInstance, device: stub.VkPhysicalDevice, queuefamily: u32) bool {
+    return cdef.glfwGetPhysicalDevicePresentationSupport(instance, device, queuefamily) == .true;
+}
+
+pub fn getOSMesaColorBuffer(window: Window, width: ?*c_int, height: ?*c_int, format: ?*c_int, buffer: ?[*][*]u8) bool {
+    return cdef.glfwGetOSMesaColorBuffer(window, width, height, format, buffer) == .true;
+}
+
+pub fn getOSMesaDepthBuffer(window: Window, width: ?*c_int, height: ?*c_int, bytesPerValue: ?*c_int, buffer: ?[*][*]u8) bool {
+    return cdef.glfwGetOSMesaDepthBuffer(window, width, height, bytesPerValue, buffer) == .true;
+}
 
 pub const terminate = cdef.glfwTerminate;
 pub const getVersion = cdef.glfwGetVersion;
@@ -1220,7 +1266,6 @@ pub const getVersionString = cdef.glfwGetVersionString;
 pub const getError = cdef.glfwGetError;
 pub const setErrorCallback = cdef.glfwSetErrorCallback;
 pub const getPlatform = cdef.glfwGetPlatform;
-pub const platformSupported = cdef.glfwPlatformSupported;
 pub const getPrimaryMonitor = cdef.glfwGetPrimaryMonitor;
 pub const getMonitorPos = cdef.glfwGetMonitorPos;
 pub const getMonitorWorkarea = cdef.glfwGetMonitorWorkarea;
@@ -1233,8 +1278,6 @@ pub const setMonitorCallback = cdef.glfwSetMonitorCallback;
 pub const getVideoMode = cdef.glfwGetVideoMode;
 pub const defaultWindowHints = cdef.glfwDefaultWindowHints;
 pub const destroyWindow = cdef.glfwDestroyWindow;
-pub const windowShouldClose = cdef.glfwWindowShouldClose;
-pub const setWindowShouldClose = cdef.glfwSetWindowShouldClose;
 pub const getWindowTitle = cdef.glfwGetWindowTitle;
 pub const setWindowTitle = cdef.glfwSetWindowTitle;
 pub const getWindowSize = cdef.glfwGetWindowSize;
@@ -1269,7 +1312,6 @@ pub const pollEvents = cdef.glfwPollEvents;
 pub const waitEvents = cdef.glfwWaitEvents;
 pub const waitEventsTimeout = cdef.glfwWaitEventsTimeout;
 pub const postEmptyEvent = cdef.glfwPostEmptyEvent;
-pub const rawMouseMotionSupported = cdef.glfwRawMouseMotionSupported;
 pub const getKeyName = cdef.glfwGetKeyName;
 pub const getKeyScancode = cdef.glfwGetKeyScancode;
 pub const getKey = cdef.glfwGetKey;
@@ -1285,15 +1327,12 @@ pub const setCursorPosCallback = cdef.glfwSetCursorPosCallback;
 pub const setCursorEnterCallback = cdef.glfwSetCursorEnterCallback;
 pub const setScrollCallback = cdef.glfwSetScrollCallback;
 pub const setDropCallback = cdef.glfwSetDropCallback;
-pub const joystickPresent = cdef.glfwJoystickPresent;
 pub const getJoystickName = cdef.glfwGetJoystickName;
 pub const getJoystickGUID = cdef.glfwGetJoystickGUID;
 pub const setJoystickUserPointer = cdef.glfwSetJoystickUserPointer;
 pub const getJoystickUserPointer = cdef.glfwGetJoystickUserPointer;
-pub const joystickIsGamepad = cdef.glfwJoystickIsGamepad;
 pub const setJoystickCallback = cdef.glfwSetJoystickCallback;
 pub const getGamepadName = cdef.glfwGetGamepadName;
-pub const getGamepadState = cdef.glfwGetGamepadState;
 pub const setClipboardString = cdef.glfwSetClipboardString;
 pub const getTime = cdef.glfwGetTime;
 pub const setTime = cdef.glfwSetTime;
@@ -1303,19 +1342,14 @@ pub const makeContextCurrent = cdef.glfwMakeContextCurrent;
 pub const getCurrentContext = cdef.glfwGetCurrentContext;
 pub const swapBuffers = cdef.glfwSwapBuffers;
 pub const swapInterval = cdef.glfwSwapInterval;
-pub const extensionSupported = cdef.glfwExtensionSupported;
 pub const getProcAddress = cdef.glfwGetProcAddress;
-pub const vulkanSupported = cdef.glfwVulkanSupported;
 pub const initVulkanLoader = cdef.glfwInitVulkanLoader;
-pub const getPhysicalDevicePresentationSupport = cdef.glfwGetPhysicalDevicePresentationSupport;
 pub const createWindowSurface = cdef.glfwCreateWindowSurface;
 pub const getX11Adapter = cdef.glfwGetX11Adapter;
 pub const getX11Monitor = cdef.glfwGetX11Monitor;
 pub const getX11Window = cdef.glfwGetX11Window;
 pub const setX11SelectionString = cdef.glfwSetX11SelectionString;
 pub const getGLXWindow = cdef.glfwGetGLXWindow;
-pub const getOSMesaColorBuffer = cdef.glfwGetOSMesaColorBuffer;
-pub const getOSMesaDepthBuffer = cdef.glfwGetOSMesaDepthBuffer;
 
 pub const Monitor = *opaque {
     pub const getPos = glfw.getMonitorPos;
