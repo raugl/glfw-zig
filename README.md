@@ -17,7 +17,7 @@ Fetch the library
 zig fetch --save git+https://github.com/raugl/glfw-zig
 ```
 
-then add this to your `build.zig`:
+then use it in your `build.zig`:
 ```zig
 const glfw_dep = b.dependency("glfw-zig", .{
     .target = target,
@@ -28,7 +28,7 @@ exe.root_module.addImport("glfw", glfw_dep.module("root"));
 exe.linkLibrary(glfw_dep.artifact("glfw"));
 ```
 
-## Examples
+## Example
 
 ```zig
 const std = @import("std");
