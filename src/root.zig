@@ -1110,7 +1110,11 @@ pub fn initHint(comptime hint: InitHint, value: InitHint.ValueType(hint)) void {
 }
 
 pub fn windowHint(comptime hint: WindowHint, value: WindowHint.ValueType(hint)) void {
-    cdef.glfwWindowHint(hint, castToCint(value));
+    if (@TypeOf(value) == [*:0]const u8) {
+        cdef.glfwWindowHintString(hint, value);
+    } else {
+        cdef.glfwWindowHint(hint, castToCint(value));
+    }
 }
 
 pub fn getWindowAttrib(window: Window, comptime attrib: WindowGetAttribute) WindowGetAttribute.ValueType(attrib) {
@@ -1221,7 +1225,7 @@ pub fn windowShouldClose(window: Window) bool {
 }
 
 pub fn setWindowShouldClose(window: Window, value: bool) void {
-    cdef.glfwSetWindowShouldClose(window, if (value) .true else false);
+    cdef.glfwSetWindowShouldClose(window, if (value) .true else .false);
 }
 
 pub fn rawMouseMotionSupported() bool {
