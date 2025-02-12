@@ -1,3 +1,30 @@
+// MIT License
+//
+// Copyright (c) 2025 raugl
+//
+// Permission is hereby granted, free of charge, to any person obtaining a copy
+// of this software and associated documentation files (the "Software"), to deal
+// in the Software without restriction, including without limitation the rights
+// to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+// copies of the Software, and to permit persons to whom the Software is
+// furnished to do so, subject to the following conditions:
+//
+// The above copyright notice and this permission notice shall be included in all
+// copies or substantial portions of the Software.
+//
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+// SOFTWARE.
+
+// TODO: Add option to override `stub` with the consumer's types
+// TODO: Get rid of the error wrappers for native functions
+// TODO: Rewrite the build step to not depend on zglfw's code anymore
+// TODO: wasm and cross compilation support
+
 const std = @import("std");
 const Allocator = std.mem.Allocator;
 const glfw = @This();
@@ -12,12 +39,6 @@ pub const version_revision = 0;
 
 pub const dont_care: c_int = -1;
 pub const any_position: c_int = -0x80000000;
-
-pub const key_last: comptime_int = @intFromEnum(Key.menu);
-pub const mouse_button_last: comptime_int = @intFromEnum(MouseButton.b8);
-pub const joystck_last: comptime_int = @intFromEnum(JoystickID.j16);
-pub const gamepad_axis_last: comptime_int = @intFromEnum(GamepadAxis.right_trigger);
-pub const gamepad_button_last: comptime_int = @intFromEnum(GamepadButton.dpad_left);
 
 pub const Bool = enum(c_int) {
     false = 0,
@@ -169,6 +190,8 @@ pub const JoystickID = enum(c_int) {
     j14 = 13,
     j15 = 14,
     j16 = 15,
+
+    pub const last = @intFromEnum(JoystickID.j16);
 };
 
 pub const GamepadButton = enum(c_int) {
@@ -192,6 +215,7 @@ pub const GamepadButton = enum(c_int) {
     pub const circle = .b;
     pub const square = .x;
     pub const triangle = .y;
+    pub const last = @intFromEnum(GamepadButton.dpad_left);
 };
 
 pub const GamepadAxis = enum(c_int) {
@@ -201,6 +225,8 @@ pub const GamepadAxis = enum(c_int) {
     right_y = 3,
     left_trigger = 4,
     right_trigger = 5,
+
+    pub const last = @intFromEnum(GamepadAxis.right_trigger);
 };
 
 pub const MouseButton = enum(c_int) {
@@ -216,6 +242,7 @@ pub const MouseButton = enum(c_int) {
     pub const left = .b1;
     pub const right = .b2;
     pub const middle = .b3;
+    pub const last = @intFromEnum(MouseButton.b8);
 };
 
 pub const Key = enum(c_int) {
@@ -342,6 +369,8 @@ pub const Key = enum(c_int) {
     right_alt = 346,
     right_super = 347,
     menu = 348,
+
+    pub const last = @intFromEnum(Key.menu);
 };
 
 pub const InitHint = enum(c_int) {
@@ -1249,7 +1278,7 @@ pub fn extensionSupported(extension: [*:0]const u8) bool {
 }
 
 pub fn vulkanSupported() bool {
-    return cdef.glfwVulkanSupported == .true;
+    return cdef.glfwVulkanSupported() == .true;
 }
 
 pub fn getPhysicalDevicePresentationSupport(instance: stub.VkInstance, device: stub.VkPhysicalDevice, queuefamily: u32) bool {
