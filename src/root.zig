@@ -20,9 +20,6 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-// TODO: Add option to override `stub` with the consumer's types
-// TODO: Get rid of the error wrappers for native functions
-
 const std = @import("std");
 const Allocator = std.mem.Allocator;
 const glfw = @This();
@@ -664,6 +661,33 @@ fn castFromCint(comptime T: type, value: c_int) T {
     };
 }
 
+// Vulkan
+pub const VkInstance = *anyopaque;
+pub const VkPhysicalDevice = *anyopaque;
+pub const VkSurfaceKHR = *anyopaque;
+pub const VkAllocationCallbacks = anyopaque;
+pub const VkResult = c_int;
+pub const PFN_vkGetInstanceProcAddr = *const fn (instance: ?VkInstance, pName: [*:0]const u8) callconv(.C) ?VkProc;
+
+// X11
+pub const RRCrtc = c_ulong;
+pub const RROutput = c_ulong;
+pub const X11Window = c_ulong;
+pub const X11Display = *anyopaque;
+pub const GLXContext = *anyopaque;
+pub const GLXWindow = c_ulong;
+
+// Wayland
+pub const WlDisplay = *anyopaque;
+pub const WlOutput = *anyopaque;
+pub const WlSurface = *anyopaque;
+pub const EGLDisplay = *anyopaque;
+pub const EGLContext = *anyopaque;
+pub const EGLSurface = *anyopaque;
+
+// OSMesa
+pub const OSMesaContext = *anyopaque;
+
 pub const GLProc = *const fn () callconv(.C) void;
 pub const VkProc = *const fn () callconv(.C) void;
 
@@ -748,35 +772,6 @@ pub const GlfwAllocator = extern struct {
     reallocate: ReallocateFn,
     deallocate: DeallocateFn,
     user: ?*anyopaque = null,
-};
-
-pub const stub = struct {
-    // Vulkan
-    pub const VkInstance = *anyopaque;
-    pub const VkPhysicalDevice = *anyopaque;
-    pub const VkSurfaceKHR = *anyopaque;
-    pub const VkAllocationCallbacks = anyopaque;
-    pub const VkResult = c_int;
-    pub const PFN_vkGetInstanceProcAddr = *const fn (instance: ?VkInstance, pName: [*:0]const u8) callconv(.C) ?VkProc;
-
-    // X11
-    pub const Display = anyopaque;
-    pub const RRCrtc = c_ulong;
-    pub const RROutput = c_ulong;
-    pub const Window = c_ulong;
-    pub const GLXContext = *anyopaque;
-    pub const GLXWindow = c_ulong;
-
-    // Wayland
-    pub const wl_display = anyopaque;
-    pub const wl_output = anyopaque;
-    pub const wl_surface = anyopaque;
-    pub const EGLDisplay = *anyopaque;
-    pub const EGLContext = *anyopaque;
-    pub const EGLSurface = *anyopaque;
-
-    // OSMesa
-    pub const OSMesaContext = *anyopaque;
 };
 
 pub const cdef = struct {
@@ -902,10 +897,10 @@ pub const cdef = struct {
     pub extern fn glfwGetRequiredInstanceExtensions(count: *u32) ?[*][*:0]const u8;
 
     // Vulkan
-    pub extern fn glfwInitVulkanLoader(loader: ?stub.PFN_vkGetInstanceProcAddr) void;
-    pub extern fn glfwGetInstanceProcAddress(instance: ?stub.VkInstance, procname: [*:0]const u8) ?VkProc;
-    pub extern fn glfwGetPhysicalDevicePresentationSupport(instance: stub.VkInstance, device: stub.VkPhysicalDevice, queuefamily: u32) Bool;
-    pub extern fn glfwCreateWindowSurface(instance: stub.VkInstance, window: Window, allocator: ?*const stub.VkAllocationCallbacks, surface: *stub.VkSurfaceKHR) stub.VkResult;
+    pub extern fn glfwInitVulkanLoader(loader: ?PFN_vkGetInstanceProcAddr) void;
+    pub extern fn glfwGetInstanceProcAddress(instance: ?VkInstance, procname: [*:0]const u8) ?VkProc;
+    pub extern fn glfwGetPhysicalDevicePresentationSupport(instance: VkInstance, device: VkPhysicalDevice, queuefamily: u32) Bool;
+    pub extern fn glfwCreateWindowSurface(instance: VkInstance, window: Window, allocator: ?*const VkAllocationCallbacks, surface: *VkSurfaceKHR) VkResult;
 
     // Windows
     pub extern fn glfwGetWin32Adapter(monitor: Monitor) ?[*:0]const u8;
@@ -921,29 +916,29 @@ pub const cdef = struct {
     // pub extern fn glfwGetNSGLContext(window: Window) ?id;
 
     // X11
-    pub extern fn glfwGetX11Display() ?*stub.Display;
-    pub extern fn glfwGetX11Adapter(monitor: Monitor) stub.RRCrtc;
-    pub extern fn glfwGetX11Monitor(monitor: Monitor) stub.RROutput;
-    pub extern fn glfwGetX11Window(window: Window) stub.Window;
+    pub extern fn glfwGetX11Display() ?X11Display;
+    pub extern fn glfwGetX11Adapter(monitor: Monitor) RRCrtc;
+    pub extern fn glfwGetX11Monitor(monitor: Monitor) RROutput;
+    pub extern fn glfwGetX11Window(window: Window) X11Window;
     pub extern fn glfwSetX11SelectionString(string: [*:0]const u8) void;
     pub extern fn glfwGetX11SelectionString() ?[*:0]const u8;
 
-    pub extern fn glfwGetGLXContext(window: Window) ?stub.GLXContext;
-    pub extern fn glfwGetGLXWindow(window: Window) stub.GLXWindow;
+    pub extern fn glfwGetGLXContext(window: Window) ?GLXContext;
+    pub extern fn glfwGetGLXWindow(window: Window) GLXWindow;
 
     // Wayland
-    pub extern fn glfwGetWaylandDisplay() ?*stub.wl_display;
-    pub extern fn glfwGetWaylandMonitor() ?*stub.wl_output;
-    pub extern fn glfwGetWaylandWindow() ?*stub.wl_surface;
+    pub extern fn glfwGetWaylandDisplay() ?WlDisplay;
+    pub extern fn glfwGetWaylandMonitor() ?WlOutput;
+    pub extern fn glfwGetWaylandWindow() ?WlSurface;
 
-    pub extern fn glfwGetEGLDisplay() ?stub.EGLDisplay;
-    pub extern fn glfwGetEGLContext() ?stub.EGLContext;
-    pub extern fn glfwGetEGLSurface() ?stub.EGLSurface;
+    pub extern fn glfwGetEGLDisplay() ?EGLDisplay;
+    pub extern fn glfwGetEGLContext() ?EGLContext;
+    pub extern fn glfwGetEGLSurface() ?EGLSurface;
 
     // OSMesa
     pub extern fn glfwGetOSMesaColorBuffer(window: Window, width: ?*c_int, height: ?*c_int, format: ?*c_int, buffer: ?[*][*]u8) Bool;
     pub extern fn glfwGetOSMesaDepthBuffer(window: Window, width: ?*c_int, height: ?*c_int, bytesPerValue: ?*c_int, buffer: ?[*][*]u8) Bool;
-    pub extern fn glfwGetOSMesaContext(window: Window) ?stub.OSMesaContext;
+    pub extern fn glfwGetOSMesaContext(window: Window) ?OSMesaContext;
 };
 
 pub fn init() Error!void {
@@ -1149,100 +1144,101 @@ pub fn getWindowAttrib(window: Window, comptime attrib: WindowGetAttribute) Wind
     return castFromCint(WindowGetAttribute.ValueType(attrib), value);
 }
 
-pub fn getInputMode(window: Window, comptime mode: InputMode) c_int {
+pub fn getInputMode(window: Window, comptime mode: InputMode) InputMode.ValueType(mode) {
     const value = cdef.glfwGetInputMode(window, mode);
     return castFromCint(InputMode.ValueType(mode), value);
 }
 
-pub fn getInstanceProcAddress(instance: ?stub.VkInstance, procname: [*:0]const u8) Error!VkProc {
-    if (cdef.glfwGetInstanceProcAddress(instance, procname)) |proc| return proc;
-    try checkError();
-    unreachable;
-}
+// pub fn getInstanceProcAddress(instance: ?stub.VkInstance, procname: [*:0]const u8) Error!VkProc {
+//     if (cdef.glfwGetInstanceProcAddress(instance, procname)) |proc| return proc;
+//     try checkError();
+//     unreachable;
+// }
+//
+// pub fn getWin32Adapter(monitor: Monitor) Error![*:0]const u8 {
+//     if (cdef.glfwGetWin32Adapter(monitor)) |adapter| return adapter;
+//     try checkError();
+//     unreachable;
+// }
+//
+// pub fn getWin32Monitor(monitor: Monitor) Error![*:0]const u8 {
+//     if (cdef.glfwGetWin32Monitor(monitor)) |monitor_| return monitor_;
+//     try checkError();
+//     unreachable;
+// }
+//
+// pub fn getWin32Window(window: Window) Error!std.os.windows.HWND {
+//     if (cdef.glfwGetWin32Window(window)) |window_| return window_;
+//     try checkError();
+//     unreachable;
+// }
+//
+// pub fn getWGLContext(window: Window) Error!std.os.windows.HGLRC {
+//     if (cdef.glfwGetWGLContext(window)) |context| return context;
+//     try checkError();
+//     unreachable;
+// }
+//
+// pub fn getX11Display() Error!*stub.Display {
+//     if (cdef.glfwGetX11Display()) |display| return display;
+//     try checkError();
+//     unreachable;
+// }
+//
+// pub fn getX11SelectionString() Error![*:0]const u8 {
+//     if (cdef.glfwGetX11SelectionString()) |string| return string;
+//     try checkError();
+//     unreachable;
+// }
+//
+// pub fn getGLXContext(window: Window) Error!stub.GLXContext {
+//     if (cdef.glfwGetGLXContext(window)) |context| return context;
+//     try checkError();
+//     unreachable;
+// }
+//
+// pub fn getWaylandDisplay() Error!*stub.wl_display {
+//     if (cdef.glfwGetWaylandDisplay()) |display| return display;
+//     try checkError();
+//     unreachable;
+// }
+//
+// pub fn getWaylandMonitor() Error!*stub.wl_output {
+//     if (cdef.glfwGetWaylandMonitor()) |monitor| return monitor;
+//     try checkError();
+//     unreachable;
+// }
+//
+// pub fn getWaylandWindow() Error!*stub.wl_surface {
+//     if (cdef.glfwGetWaylandWindow()) |window| return window;
+//     try checkError();
+//     unreachable;
+// }
+//
+// pub fn getEGLDisplay() Error!stub.EGLDisplay {
+//     if (cdef.glfwGetEGLDisplay()) |display| return display;
+//     try checkError();
+//     unreachable;
+// }
+//
+// pub fn getEGLContext() Error!stub.EGLContext {
+//     if (cdef.glfwGetEGLContext()) |context| return context;
+//     try checkError();
+//     unreachable;
+// }
+//
+// pub fn getEGLSurface() Error!stub.EGLSurface {
+//     if (cdef.glfwGetEGLSurface()) |surface| return surface;
+//     try checkError();
+//     unreachable;
+// }
+//
+// pub fn getOSMesaContext(window: Window) Error!stub.OSMesaContext {
+//     if (cdef.glfwGetOSMesaContext(window)) |context| return context;
+//     try checkError();
+//     unreachable;
+// }
 
-pub fn getWin32Adapter(monitor: Monitor) Error![*:0]const u8 {
-    if (cdef.glfwGetWin32Adapter(monitor)) |adapter| return adapter;
-    try checkError();
-    unreachable;
-}
-
-pub fn getWin32Monitor(monitor: Monitor) Error![*:0]const u8 {
-    if (cdef.glfwGetWin32Monitor(monitor)) |monitor_| return monitor_;
-    try checkError();
-    unreachable;
-}
-
-pub fn getWin32Window(window: Window) Error!std.os.windows.HWND {
-    if (cdef.glfwGetWin32Window(window)) |window_| return window_;
-    try checkError();
-    unreachable;
-}
-
-pub fn getWGLContext(window: Window) Error!std.os.windows.HGLRC {
-    if (cdef.glfwGetWGLContext(window)) |context| return context;
-    try checkError();
-    unreachable;
-}
-
-pub fn getX11Display() Error!*stub.Display {
-    if (cdef.glfwGetX11Display()) |display| return display;
-    try checkError();
-    unreachable;
-}
-
-pub fn getX11SelectionString() Error![*:0]const u8 {
-    if (cdef.glfwGetX11SelectionString()) |string| return string;
-    try checkError();
-    unreachable;
-}
-
-pub fn getGLXContext(window: Window) Error!stub.GLXContext {
-    if (cdef.glfwGetGLXContext(window)) |context| return context;
-    try checkError();
-    unreachable;
-}
-
-pub fn getWaylandDisplay() Error!*stub.wl_display {
-    if (cdef.glfwGetWaylandDisplay()) |display| return display;
-    try checkError();
-    unreachable;
-}
-
-pub fn getWaylandMonitor() Error!*stub.wl_output {
-    if (cdef.glfwGetWaylandMonitor()) |monitor| return monitor;
-    try checkError();
-    unreachable;
-}
-
-pub fn getWaylandWindow() Error!*stub.wl_surface {
-    if (cdef.glfwGetWaylandWindow()) |window| return window;
-    try checkError();
-    unreachable;
-}
-
-pub fn getEGLDisplay() Error!stub.EGLDisplay {
-    if (cdef.glfwGetEGLDisplay()) |display| return display;
-    try checkError();
-    unreachable;
-}
-
-pub fn getEGLContext() Error!stub.EGLContext {
-    if (cdef.glfwGetEGLContext()) |context| return context;
-    try checkError();
-    unreachable;
-}
-
-pub fn getEGLSurface() Error!stub.EGLSurface {
-    if (cdef.glfwGetEGLSurface()) |surface| return surface;
-    try checkError();
-    unreachable;
-}
-
-pub fn getOSMesaContext(window: Window) Error!stub.OSMesaContext {
-    if (cdef.glfwGetOSMesaContext(window)) |context| return context;
-    try checkError();
-    unreachable;
-}
 pub fn platformSupported(platform: Platform) bool {
     return cdef.glfwPlatformSupported(platform) == .true;
 }
@@ -1279,7 +1275,7 @@ pub fn vulkanSupported() bool {
     return cdef.glfwVulkanSupported() == .true;
 }
 
-pub fn getPhysicalDevicePresentationSupport(instance: stub.VkInstance, device: stub.VkPhysicalDevice, queuefamily: u32) bool {
+pub fn getPhysicalDevicePresentationSupport(instance: VkInstance, device: VkPhysicalDevice, queuefamily: u32) bool {
     return cdef.glfwGetPhysicalDevicePresentationSupport(instance, device, queuefamily) == .true;
 }
 
@@ -1375,12 +1371,33 @@ pub const swapBuffers = cdef.glfwSwapBuffers;
 pub const swapInterval = cdef.glfwSwapInterval;
 pub const getProcAddress = cdef.glfwGetProcAddress;
 pub const initVulkanLoader = cdef.glfwInitVulkanLoader;
+pub const getInstanceProcAddress = cdef.glfwGetInstanceProcAddress;
 pub const createWindowSurface = cdef.glfwCreateWindowSurface;
+pub const getWin32Adapter = cdef.glfwGetWin32Adapter;
+pub const getWin32Monitor = cdef.glfwGetWin32Monitor;
+pub const getWin32Window = cdef.glfwGetWin32Window;
+pub const getWGLContext = cdef.glfwGetWGLContext;
+pub const getX11Display = cdef.glfwGetX11Display;
 pub const getX11Adapter = cdef.glfwGetX11Adapter;
 pub const getX11Monitor = cdef.glfwGetX11Monitor;
 pub const getX11Window = cdef.glfwGetX11Window;
 pub const setX11SelectionString = cdef.glfwSetX11SelectionString;
+pub const getX11SelectionString = cdef.glfwGetX11SelectionString;
+pub const getGLXContext = cdef.glfwGetGLXContext;
 pub const getGLXWindow = cdef.glfwGetGLXWindow;
+pub const getWaylandDisplay = cdef.glfwGetWaylandDisplay;
+pub const getWaylandMonitor = cdef.glfwGetWaylandMonitor;
+pub const getWaylandWindow = cdef.glfwGetWaylandWindow;
+pub const getEGLDisplay = cdef.glfwGetEGLDisplay;
+pub const getEGLContext = cdef.glfwGetEGLContext;
+pub const getEGLSurface = cdef.glfwGetEGLSurface;
+pub const getOSMesaContext = cdef.glfwGetOSMesaContext;
+
+// TODO: I have no idea what goes on in mac land
+// pub const getCocoaMonitor = cdef.glfwGetCocoaMonitor;
+// pub const getCocoaWindow = cdef.glfwGetCocoaWindow;
+// pub const getCocoaView = cdef.glfwGetCocoaView;
+// pub const getNSGLContext = cdef.glfwGetNSGLContext;
 
 pub const Monitor = *opaque {
     pub const getPos = glfw.getMonitorPos;
