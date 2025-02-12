@@ -22,8 +22,6 @@
 
 // TODO: Add option to override `stub` with the consumer's types
 // TODO: Get rid of the error wrappers for native functions
-// TODO: Rewrite the build step to not depend on zglfw's code anymore
-// TODO: wasm and cross compilation support
 
 const std = @import("std");
 const Allocator = std.mem.Allocator;

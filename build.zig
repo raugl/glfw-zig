@@ -1,5 +1,8 @@
 const std = @import("std");
 
+// TODO: Get rid of the external dependency `system_sdk`
+// TODO: Fix include headers
+
 pub fn build(b: *std.Build) void {
     const optimize = b.standardOptimizeOption(.{});
     const target = b.standardTargetOptions(.{});
@@ -22,25 +25,21 @@ pub fn build(b: *std.Build) void {
         ) orelse true,
     };
 
-    _ = b.addModule("root", .{ .root_source_file = b.path("src/root.zig") });
+    const module = b.addModule("root", .{ .root_source_file = b.path("src/root.zig") });
+    // const install_headers = b.addInstallHeaderFile(b.path("libs/glfw/include"), "");
+    // b.getInstallStep().dependOn(&install_headers.step);
 
-    if (target.result.os.tag == .emscripten) {
-        return;
-    }
+    if (target.result.os.tag == .emscripten) return;
 
-    const glfw = if (options.shared) b.addSharedLibrary(.{
+    const lib_opts = .{
         .name = "glfw",
         .target = target,
         .optimize = optimize,
-    }) else b.addStaticLibrary(.{
-        .name = "glfw",
-        .target = target,
-        .optimize = optimize,
-    });
-    b.installArtifact(glfw);
+    };
+    const glfw = if (options.shared) b.addSharedLibrary(lib_opts) else b.addStaticLibrary(lib_opts);
+    module.linkLibrary(glfw);
+
     linkSystemLibs(b, glfw, target, options);
-    glfw.installHeadersDirectory(b.path("libs/glfw/include"), "", .{});
-
     if (options.shared and target.result.os.tag == .windows) {
         glfw.root_module.addCMacro("_GLFW_BUILD_DLL", "");
     }
@@ -64,7 +63,7 @@ pub fn build(b: *std.Build) void {
 
     switch (target.result.os.tag) {
         .windows => {
-            glfw.addCSourceFiles(.{ .files = &(common_files ++ .{
+            addCSourceFiles(glfw, common_files, .{
                 src_dir ++ "wgl_context.c",
                 src_dir ++ "win32_thread.c",
                 src_dir ++ "win32_init.c",
@@ -73,11 +72,11 @@ pub fn build(b: *std.Build) void {
                 src_dir ++ "win32_joystick.c",
                 src_dir ++ "win32_window.c",
                 src_dir ++ "win32_module.c",
-            }) });
+            });
             glfw.root_module.addCMacro("_GLFW_WIN32", "1");
         },
         .macos => {
-            glfw.addCSourceFiles(.{ .files = &(common_files ++ .{
+            addCSourceFiles(glfw, common_files, .{
                 src_dir ++ "posix_thread.c",
                 src_dir ++ "posix_module.c",
                 src_dir ++ "posix_poll.c",
@@ -87,41 +86,41 @@ pub fn build(b: *std.Build) void {
                 src_dir ++ "cocoa_init.m",
                 src_dir ++ "cocoa_window.m",
                 src_dir ++ "cocoa_monitor.m",
-            }) });
+            });
             glfw.root_module.addCMacro("_GLFW_COCOA", "1");
         },
         .linux => {
-            glfw.addCSourceFiles(.{ .files = &(common_files ++ .{
+            addCSourceFiles(glfw, common_files, .{
                 src_dir ++ "posix_time.c",
                 src_dir ++ "posix_thread.c",
                 src_dir ++ "posix_module.c",
-            }) });
+            });
 
             if (options.enable_x11 or options.enable_wayland) {
-                glfw.addCSourceFiles(.{ .files = &.{
+                addCSourceFiles(glfw, .{
                     src_dir ++ "xkb_unicode.c",
                     src_dir ++ "linux_joystick.c",
                     src_dir ++ "posix_poll.c",
-                } });
+                }, .{});
             }
             if (options.enable_x11) {
-                glfw.addCSourceFiles(.{ .files = &.{
+                addCSourceFiles(glfw, .{
                     src_dir ++ "x11_init.c",
                     src_dir ++ "x11_monitor.c",
                     src_dir ++ "x11_window.c",
                     src_dir ++ "glx_context.c",
-                } });
+                }, .{});
                 glfw.root_module.addCMacro("_GLFW_X11", "1");
                 glfw.linkSystemLibrary("X11");
             }
             if (options.enable_wayland) {
-                glfw.addCSourceFiles(.{ .files = &.{
+                addCSourceFiles(glfw, .{
                     src_dir ++ "wl_init.c",
                     src_dir ++ "wl_monitor.c",
                     src_dir ++ "wl_window.c",
-                } });
-                glfw.addIncludePath(b.path(src_dir ++ "wayland"));
+                }, .{});
                 glfw.root_module.addCMacro("_GLFW_WAYLAND", "1");
+                glfw.addIncludePath(b.path(src_dir ++ "wayland"));
             }
         },
         else => {},
@@ -182,4 +181,12 @@ fn linkSystemLibs(b: *std.Build, compile_step: *std.Build.Step.Compile, target: 
         },
         else => {},
     }
+}
+
+fn addCSourceFiles(
+    compile_step: *std.Build.Step.Compile,
+    comptime common_files: anytype,
+    comptime files: anytype,
+) void {
+    compile_step.addCSourceFiles(.{ .files = &(common_files ++ files) });
 }
