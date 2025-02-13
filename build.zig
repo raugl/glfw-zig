@@ -30,7 +30,7 @@ pub fn build(b: *std.Build) void {
     }
 
     const module = b.addModule("glfw", .{
-        .root_source_file = b.path("src/root.zig"),
+        .root_source_file = b.path("src/glfw.zig"),
         .imports = &.{.{ .name = "options", .module = options_step.createModule() }},
     });
     // const install_headers = b.addInstallHeaderFile(b.path("libs/glfw/include"), "");
@@ -135,7 +135,7 @@ pub fn build(b: *std.Build) void {
     { // Test step
         const tests = b.addTest(.{
             .name = "glfw-zig-tests",
-            .root_source_file = b.path("src/root.zig"),
+            .root_source_file = b.path("src/glfw.zig"),
             .target = target,
             .optimize = optimize,
         });

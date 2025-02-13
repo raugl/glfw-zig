@@ -24,8 +24,7 @@ const glfw_dep = b.dependency("glfw-zig", .{
     .optimize = optimize,
     .shared = true, // Link as dynamic library
 });
-exe.root_module.addImport("glfw", glfw_dep.module("root"));
-exe.linkLibrary(glfw_dep.artifact("glfw"));
+exe.root_module.addImport("glfw", glfw_dep.module("glfw"));
 ```
 
 ## Example
@@ -91,4 +90,4 @@ pub fn main() !void {
 
 ## Documentation
 
-The bindings mimic the official GLFW API very closely, apart from the naming convention. [GLFW's Documentation](https://www.glfw.org/documentation.html) should cover most things that you want to know. Failing that, reading `root.zig` should be easy enough and answer all your remaining questions.
+The bindings mimic the official GLFW API very closely, apart from the naming convention. [GLFW's Documentation](https://www.glfw.org/documentation.html) should cover most things that you want to know. Failing that, reading `glfw.zig` should be easy enough and answer all your remaining questions.
