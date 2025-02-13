@@ -1,6 +1,5 @@
 const std = @import("std");
 
-// TODO: Get rid of the external dependency `system_sdk`
 // TODO: Fix include headers
 
 pub fn build(b: *std.Build) void {
@@ -25,7 +24,15 @@ pub fn build(b: *std.Build) void {
         ) orelse true,
     };
 
-    const module = b.addModule("root", .{ .root_source_file = b.path("src/root.zig") });
+    const options_step = b.addOptions();
+    inline for (std.meta.fields(@TypeOf(options))) |field| {
+        options_step.addOption(field.type, field.name, @field(options, field.name));
+    }
+
+    const module = b.addModule("glfw", .{
+        .root_source_file = b.path("src/root.zig"),
+        .imports = &.{.{ .name = "options", .module = options_step.createModule() }},
+    });
     // const install_headers = b.addInstallHeaderFile(b.path("libs/glfw/include"), "");
     // b.getInstallStep().dependOn(&install_headers.step);
 
