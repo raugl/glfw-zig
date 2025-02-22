@@ -62,6 +62,7 @@ pub const Platform = enum(c_int) {
     wayland = 0x60003,
     x11 = 0x60004,
     null = 0x60005,
+    emscripten = 0x00060006,
 };
 
 pub const AnglePlatform = enum(c_int) {
@@ -911,11 +912,11 @@ pub const cdef = struct {
     pub extern fn glfwGetGLXContext(window: Window) ?*anyopaque;
     pub extern fn glfwGetGLXWindow(window: Window) c_ulong;
     pub extern fn glfwGetWaylandDisplay() ?*anyopaque;
-    pub extern fn glfwGetWaylandMonitor() ?*anyopaque;
-    pub extern fn glfwGetWaylandWindow() ?*anyopaque;
+    pub extern fn glfwGetWaylandMonitor(monitor: Monitor) ?*anyopaque;
+    pub extern fn glfwGetWaylandWindow(window: Window) ?*anyopaque;
     pub extern fn glfwGetEGLDisplay() ?*anyopaque;
-    pub extern fn glfwGetEGLContext() ?*anyopaque;
-    pub extern fn glfwGetEGLSurface() ?*anyopaque;
+    pub extern fn glfwGetEGLContext(window: Window) ?*anyopaque;
+    pub extern fn glfwGetEGLSurface(window: Window) ?*anyopaque;
 
     // OSMesa
     pub extern fn glfwGetOSMesaColorBuffer(window: Window, width: ?*c_int, height: ?*c_int, format: ?*c_int, buffer: ?[*][*]u8) Bool;
@@ -975,14 +976,14 @@ pub fn initAllocator(allocator: ?Allocator) void {
     }
 }
 
-pub fn setWindowIcon(self: Window, images: []const Image) Error!void {
-    cdef.glfwSetWindowIcon(self, @intCast(images.len), images.ptr);
+pub fn setWindowIcon(window: Window, images: []const Image) Error!void {
+    cdef.glfwSetWindowIcon(window, @intCast(images.len), images.ptr);
     try checkError();
 }
 
-pub fn getWindowPos(self: Window) Error!Vec2i {
+pub fn getWindowPos(window: Window) Error!Vec2i {
     var pos: Vec2i = undefined;
-    cdef.glfwGetWindowPos(self, &pos.x, &pos.y);
+    cdef.glfwGetWindowPos(window, &pos.x, &pos.y);
     try checkError();
     return pos;
 }
@@ -990,6 +991,12 @@ pub fn getWindowPos(self: Window) Error!Vec2i {
 pub fn setWindowPos(self: Window, xpos: i32, ypos: i32) Error!void {
     cdef.glfwSetWindowPos(self, @intCast(xpos), @intCast(ypos));
     try checkError();
+}
+
+pub fn getWindowSize(window: Window) Vec2i {
+    var pos: Vec2i = undefined;
+    cdef.glfwGetWindowPos(window, &pos.x, &pos.y);
+    return pos;
 }
 
 pub fn setGamma(self: Monitor, gamma: f32) Error!void {
@@ -1233,19 +1240,19 @@ const stub = struct {
     pub fn glfwGetWaylandDisplay() callconv(.C) ?*anyopaque {
         @panic("Native wayland features not exposed");
     }
-    pub fn glfwGetWaylandMonitor() callconv(.C) ?*anyopaque {
+    pub fn glfwGetWaylandMonitor(_: Monitor) callconv(.C) ?*anyopaque {
         @panic("Native wayland features not exposed");
     }
-    pub fn glfwGetWaylandWindow() callconv(.C) ?*anyopaque {
+    pub fn glfwGetWaylandWindow(_: Window) callconv(.C) ?*anyopaque {
         @panic("Native wayland features not exposed");
     }
     pub fn glfwGetEGLDisplay() callconv(.C) ?*anyopaque {
         @panic("Native egl features not exposed");
     }
-    pub fn glfwGetEGLContext() callconv(.C) ?*anyopaque {
+    pub fn glfwGetEGLContext(_: Window) callconv(.C) ?*anyopaque {
         @panic("Native egl features not exposed");
     }
-    pub fn glfwGetEGLSurface() callconv(.C) ?*anyopaque {
+    pub fn glfwGetEGLSurface(_: Window) callconv(.C) ?*anyopaque {
         @panic("Native egl features not exposed");
     }
     pub fn glfwGetOSMesaContext(_: Window) callconv(.C) ?*anyopaque {
@@ -1273,7 +1280,6 @@ pub const defaultWindowHints = cdef.glfwDefaultWindowHints;
 pub const destroyWindow = cdef.glfwDestroyWindow;
 pub const getWindowTitle = cdef.glfwGetWindowTitle;
 pub const setWindowTitle = cdef.glfwSetWindowTitle;
-pub const getWindowSize = cdef.glfwGetWindowSize;
 pub const setWindowSizeLimits = cdef.glfwSetWindowSizeLimits;
 pub const setWindowAspectRatio = cdef.glfwSetWindowAspectRatio;
 pub const setWindowSize = cdef.glfwSetWindowSize;
